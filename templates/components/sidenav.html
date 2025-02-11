@@ -1,0 +1,36 @@
+{% macro sidenav(path=None) %}
+<div id="layoutSidenav_nav">
+    <nav class="sidenav shadow-right sidenav-light">
+        <div class="sidenav-menu">
+            <div class="nav accordion" id="accordionSidenav">
+                <!-- Sidenav Menu Heading (Core)-->
+                <div class="sidenav-menu-heading">Core</div>
+                <!-- Sidenav Accordion (Dashboard)-->
+                <a class="nav-link collapsed {% if path == url_for('search') %}active{% endif %}" href="{{ url_for('search') }}">
+                    <div class="nav-link-icon"><i data-feather="activity"></i></div>
+                    Search
+                    <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+
+                <!-- Sidenav Heading (Custom)-->
+                <div class="sidenav-menu-heading">Parsing</div>
+                <!-- Sidenav Accordion (Pages)-->
+                <a class="nav-link collapsed {% if 'regex-parser' in path  %}active{% endif %}" href="#" datla-bs-toggle="collapse"
+                    data-bs-target="#collapsePages" aria-expanded="false" aria-controls="collapsePages">
+                    <div class="nav-link-icon"><i data-feather="grid"></i></div>
+                    Parsing
+                    <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+
+                <a class="nav-link collapsed {% if path == url_for('show_data')  %}active{% endif %}" href="{{ url_for('show_data') }}" datla-bs-toggle="collapse"
+                    data-bs-target="#collapsePages" aria-expanded="false" aria-controls="collapsePages">
+                    <div class="nav-link-icon"><i data-feather="grid"></i></div>
+                    Data
+                    <div class="sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                
+            </div>
+        </div>
+    </nav>
+</div>
+{% endmacro %}

@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% from "components/nav.html" import nav %}
+{% from "components/sidenav.html" import sidenav %}
+
+{% block title %}Search{% endblock title %}
+
+{% block content %}
+{{ nav() }}
+<div id="layoutSidenav">
+    {{ sidenav(path=request.path) }}
+    <div id="layoutSidenav_content">
+        <main>
+            <!-- Main page content-->
+            <div class="container-xl px-2 mt-n4">
+                <h2 class="mt-5 mb-0">Search</h2>
+                <hr class="mt-0 mb-4" />
+            </div>
+
+            <div class="container-xl px-2 mt-4">
+                <div class="card">
+                    <div class="card-header">Search Records</div>
+                    <div class="card-body">
+                        <!-- Search Form -->
+                        <form action="{{ url_for('search') }}" method="GET" class="mt-3">
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="urlPattern" name="search_query" placeholder="Search url patterns" required>
+                                <div class="input-group-append">
+                                    <button type="submit" class="btn btn-primary"><i class="fa fa-search"></i></button>
+                                </div>
+                            </div>
+                        </form>                        
+                    </div>
+                </div>
+            </div>
+            {% if results  != 'search' %}
+            <div class="container-xl px-2 mt-4">
+                    <div class="card">
+                        <!-- Search Results Table -->
+                        <div class="card-header">Matching Records</div>
+                    
+                        <div class="card-body table-responsive">
+                        
+                            <table id="datatablesSimple">
+                                <thead>
+                                    <tr>
+                                        <th>Source URL</th>
+                                        <th>Source Domain</th>
+                                        <th>Method</th>
+                                        <th>Agent ID</th>
+                                        <th>Time</th>
+                                        <th>Size</th>
+                                        <th>Error</th>
+                                        <th>Raw Text</th>
+                                    </tr>
+                                </thead>
+                                <tfoot>
+                                    <tr>
+                                        <th>Source URL</th>
+                                        <th>Source Domain</th>
+                                        <th>Method</th>
+                                        <th>Agent ID</th>
+                                        <th>Time</th>
+                                        <th>Size</th>
+                                        <th>Error</th>
+                                        <th>Raw Text</th>
+                                    </tr>
+                                </tfoot>
+                                {% if results|length != 0 %}
+                                    <tbody>
+                                        {% for result in results %}
+
+                                        <tr style="cursor: pointer;" class="custom-clickable-row" data-href="{{ url_for('regex_parser', preprocessing_id=result.preprocessing_id) }}">
+                                            <td>{{ result.source_full_url }}</td>
+                                            <td>{{ result.source_domain_name }}</td>
+                                            <td>{{ result.method }}</td>
+                                            <td>{{ result.agent_id }}</td>
+                                            <td>{{ result.datetimereceived }}</td>
+                                            <td>{{ result.size }}</td>
+                                            <td>{{ result.error }}</td>
+                                            <td>{{ result.truncated_raw_text }}</td>
+                                        </tr>
+
+                                        {% endfor %}
+
+                                    </tbody>
+                                {% endif %}
+                            </table>
+                        </div>
+                     
+                    </div>
+                
+            </div>
+            <!-- Pagination Container -->
+            <div class="container-xl mt-4">
+                <div class="row justify-content-center">
+                    <div class="col-xl-6">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                                    <a class="page-link" href="{% if page > 1 %}?page={{ page - 1 }}&search_query={{ searched_pattern }}{% endif %}">Previous</a>
+                                </li>
+                                {% for p in range(1, total_pages + 1) if p <= 4 %}
+                                <li class="page-item {% if p == page %}active{% endif %}">
+                                    <a class="page-link" href="?page={{ p }}&search_query={{ searched_pattern }}">{{ p }}</a>
+                                </li>
+                                {% endfor %}
+                                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                                    <a class="page-link" href="{% if page < total_pages %}?page={{ page + 1 }}&search_query={{ searched_pattern }}{% endif %}">Next</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </main>
+        {% include 'footer.html' %}
+    </div>
+</div>
+{% block js %}
+<script>
+    $(document).on('click', '.custom-clickable-row', function(e){
+        var url = $(this).data('href') + "?searched=" + "{{ searched_pattern }}";
+        window.location = url;
+    });
+    
+</script>
+{% endblock js %}
+{% endblock content %}
