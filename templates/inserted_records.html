@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+{% from "components/nav.html" import nav %}
+{% from "components/sidenav.html" import sidenav %}
+{% block title %}Reords{% endblock title %}
+
+
+{% block content %}
+{{ nav() }} 
+<div id="layoutSidenav">
+    {{ sidenav(request.path) }}
+      <div id="layoutSidenav_content">
+                <main>
+                    <!-- Main page content-->
+                    <div class="container-xl px-2 mt-n4">
+                        <h2 class="mt-5 mb-0">Data</h2>
+                        <hr class="mt-0 mb-4" />
+                    </div>
+                
+                    <div class="container-xl px-2 mt-4">
+                        <div class="card">
+                            <div class="card-header">Inserted Data</div>
+                            <div class="card-body px-10">
+                                <div>
+                                    <select class="form-select" id="idSelect" onchange="handleIdChange()">
+                                        <option class="h5" value="">Select Record</option>
+                                        {% for result in results %}
+                                            <option class="h5" value="{{ result.people_collection_data.people_id }}">{{ result.people_collection_data.people_id }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div id="keySelectContainer" style="display: none;"  class="mt-4">
+                                    <select class="form-select" id="keysSelect" onchange="handleKeyChange()">
+                                        <option class="h5" value="">Select collections</option>
+                                    </select>
+                                </div>
+                                <div class="mt-4">
+                                    <form>
+                                        <textarea style="border: 1px solid;" id="inputData" class="form-control" rows="30" readonly></textarea>
+                                    </form>  
+                                </div>                     
+                            </div>
+                            
+                        </div>
+                    </div>
+                
+                </main>
+            {% include 'footer.html' %}
+    </div>
+</div>
+{% block js %}
+<script>
+ 
+    var results = {{ results | tojson }};
+    
+    function handleIdChange() {
+        var selectElement = document.getElementById("idSelect");
+        var selectedId = selectElement.value;
+        
+        // Loop through the results to find the selected record
+        for (var i = 0; i < results.length; i++) {
+            if (results[i].people_collection_data.people_id === selectedId) {
+                // Display the output of the selected record
+                var selectedRecord = results[i];
+                console.log(selectedRecord);
+                
+                // Populate the keysSelect dropdown with keys from the selected record
+                var keysSelect = document.getElementById("keysSelect");
+                keysSelect.innerHTML = ""; // Clear existing options
+                Object.keys(selectedRecord).forEach(function(key) {
+                    var option = document.createElement("option");
+                    option.value = key;
+                    option.textContent = key;
+                    keysSelect.appendChild(option);
+                });
+                
+                // Show the keysSelect dropdown
+                document.getElementById("keySelectContainer").style.display = "block";
+                
+                break; // Exit the loop once the selected record is found
+            }
+        }
+    }
+
+    function handleKeyChange() {
+        var selectElement = document.getElementById("keysSelect");
+        var selectedKey = selectElement.value;
+        
+        // Get the selected id from idSelect
+        var selectedId = document.getElementById("idSelect").value;
+        
+        // Find the selected record
+        var selectedRecord = results.find(function(result) {
+            return result.people_collection_data.people_id === selectedId;
+        });
+        
+        // Get the value associated with the selected key
+        var selectedValue = selectedRecord[selectedKey];
+        
+        // If the value is an object, stringify it
+        if (typeof selectedValue === "object") {
+            selectedValue = JSON.stringify(selectedValue, null, 4); // Indent with 4 spaces for readability
+        }
+        
+        // Update the textarea with the selected key's value
+        var textareaElement = document.getElementById("inputData");
+        textareaElement.value = selectedKey + ": " + selectedValue;
+    }
+    
+    
+</script>
+
+<div id="">
+    <select class="form-select" id="idSelect" onchange="handleRecordChange()">
+        <option class="h5" value="">Select Record</option>
+        {% for result in results %}
+            <option class="h5" value="{{ result.people_collection_data.people_id }}">{{ result.people_collection_data.people_id }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+
+
+
+{% endblock js %}
+{% endblock content %}

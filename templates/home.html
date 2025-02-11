@@ -1,0 +1,62 @@
+<!-- templates/index.html -->
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <h2>All Records</h2>
+
+    <!-- Search Bar -->
+    <div class="container-fluid d-flex justify-content-end">
+      <form class="d-flex" action="{{ url_for('search_todo') }}" method="POST" class="mb-3">
+        <input class="form-control me-2" style="width:400px" type="search" placeholder="Search..."  name="keyword" aria-label="Search">
+        <button class="btn btn-outline-primary" type="submit">Search</button>
+      </form>
+    </div>
+    
+  
+
+    <!-- Responsive Table -->
+    <div class="table-responsive mb-5">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Completed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for todo in todos %}
+                    <tr>
+                        <td>{{ todo.title }}</td>
+                        <td>{{ todo.description }}</td>
+                        <td>{{ todo.completed }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2>Create Records</h2>
+    
+    <!-- Add Todo Form -->
+    <form action="{{ url_for('add_todo') }}" method="post" class="mb">
+        <label for="title" class="form-label">Title:</label>
+        <input type="text" name="title" id="title" class="form-control" required>
+        
+        <label for="description" class="form-label mt-2">Description:</label>
+        <textarea name="description" id="description" class="form-control" required></textarea>
+        
+        <div class="d-flex justify-content-center">
+            <button type="submit" class="btn btn-primary mt-3">Add Records</button>
+        </div>
+        
+    </form>
+    
+    
+
+{% endblock %}
+
+{% set active_page = 'index' %}

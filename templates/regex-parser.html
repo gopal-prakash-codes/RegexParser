@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+{% from "components/nav.html" import nav %}
+{% from "components/sidenav.html" import sidenav %}
+{% block title %}Parsing{% endblock title %}
+
+
+{% block content %}
+{{ nav() }} 
+<div id="layoutSidenav">
+    {{ sidenav(request.path) }}
+      <div id="layoutSidenav_content">
+                <main>
+                  <div class="container-xl px-2 mt-n4">
+                    <h2 class="mt-5 mb-0">Parser</h2>
+                    <hr class="mt-0 mb-4" />
+                  </div>
+                  <div class="container-sm">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                    {% for category, message in messages %}
+                    {% if category == 'success' %}
+                        <div class="d-flex alert alert-success alert-dismissible fade show hidden justify-content-center" role="alert">
+                        {% else %}
+                        <div class="d-flex alert alert-danger alert-dismissible fade show justify-content-center" role="alert">
+                        {% endif %}
+                           {{ message }}
+                           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% endwith %}
+                   </div>
+                    <div class="container-xl px-0">
+                        <div class="row">
+                            <div class="col-xl-6 px-4">
+                                <div class="card mb-4">
+                                    <div class="card-header">Data Input</div>
+                                    <div class="card-body">
+                                        <form>
+                                            <textarea style="border: 1px solid;" id="inputData" class="form-control" rows="40" readonly>"raw_text" : {{ result.raw_text | tojson(indent=4) }}</textarea>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                    
+                            <div class="col-xl-6 px-4">
+                                <div class="card mb-4">
+                                    <div class="card-header">Unpacking and Parsing</div>
+                                    <div class="card-body">
+                                        <div class="btn-group d-flex justify-content-center mb-5" role="group" aria-label="Choose an action">
+                                            <button type="button" class="btn btn-primary rounded-1" id="unpackBtn">Unpack Agents</button>
+                                            <button type="button" class="btn btn-info rounded-1" id="parseBtn" style="margin-left: 14px; margin-right: 11px;">Parse Agents</button>
+                                            <button type="button" class="btn btn-success rounded-1" id="thirdBtn">Parser</button>
+                                        </div>
+
+                                        <div id="unpackAgents" style="display: none;">
+                                            <select class="form-select" id="agentSelect" onchange="handleAgentChange()">
+                                                <option class="h5" value="">Select Key</option>
+                                                {% for key, value in result.raw_text.items() %}
+                                                    {% if value.__class__.__name__ =='list'%} 
+                                                        <option class="h5" value="{{ key }}">{{ key }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <div id="agentDropdown" style="display:none;">
+                                                <select class="form-select mt-3" id="agentValues" onchange="handleValueChange()">
+                                                    <option class="h5" value="">Select Value</option>
+                                                </select>
+                                            </div>
+                                            <textarea style="border: 1px solid; display:none;" id="agentOutput" class="form-control mt-3 mb-5" rows="20" readonly></textarea>
+                                            <div class="col-md-12 text-center" id="saveButtonDiv" style="display: none;">
+                                                <button type="button" class="btn btn-primary rounded-1 align-item-center" onclick="saveData()">Save</button>
+                                            </div>
+                                        </div>
+                                        
+
+                                        <div id="parseAgents" style="display:none;">
+                                            <select class="form-select" id="fieldAgentSelect" onchange="handleFieldAgentChange()">
+                                                <option class="h5" value="">Select Key</option>
+                                                {% for key, value in result.raw_text.items() %}
+                                                    {% if value.__class__.__name__ =='list'%} 
+                                                        <option class="h5" value="{{ key }}">{{ key }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                            <div id="fieldAgentDropdown" style="display:none;">
+                                                <select class="form-select mt-3" id="fieldAgentValues" onchange="handleFieldValueChange()">
+                                                    <option class="h5" value="">Select Field</option>
+                                                </select>
+                                            </div>
+                                            <textarea style="border: 1px solid; display:none;" id="fieldOutput" class="form-control mt-3 mb-5" rows="19" readonly></textarea>
+                                            
+                                        </div>
+                                        
+                                       <div id="parserDiv" style="display:none;">
+                                            <div class="input-group mb-3">
+                                                <select id="parserSelect" class="form-select" aria-label="Parser select options">
+                                                    <option class="h5" value="select" selected>Select Parser</option>
+                                                    <option class="h5" value="1">RegeX</option>
+                                                    <option class="h5" value="2">Json</option>
+                                                </select>
+                                            </div>
+                                            <form id="regexForm" style="display: none;">
+                                                <div class="input-group mb-3">
+                                                    <input id="regexInput" style="border: 1px solid;" type="text" class="form-control" placeholder="Enter Regular Expression" onfocus="removeError()" required>
+                                                    <div class="input-group-append"> 
+                                                        <button class="btn btn-primary" type="button" onclick="applyRegex()">Apply Regex</button>
+                                                    </div>
+                                                </div>
+                                                <div id="error-message" style="color: red;"></div>
+                                                <textarea style="border: 1px solid;" id="output" class="form-control mt-3" rows="32" readonly></textarea>
+                                            </form>
+
+                                            <form id="jsonForm" style="display: none;">
+                                                <div class="input-group mb-3 justify-content-center">
+                                                    <input id="jsonInput" style="border: 1px solid;" type="hidden" class="form-control" value="{{ result.preprocessing_id}}" readonly>
+                                                    <div class="input-group-append"> 
+                                                        <button class="btn btn-primary" type="button" onclick="parseAsJson()">Apply Json Parser</button>
+                                                    </div>
+                                                </div>
+                                                <textarea style="border: 1px solid; white-space: pre-wrap;" id="jsonOutput" class="form-control mt-3" rows="32" readonly></textarea>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
+                </main>
+            {% include 'footer.html' %}
+    </div>
+</div>
+{% block js %}
+<script>
+
+
+    function handleAgentChange() {
+        var agentSelect = document.getElementById("agentSelect");
+        var agentOutput = document.getElementById("agentOutput");
+        var agentValues = document.getElementById("agentValues");
+        agentOutput.value = ""; 
+        agentValues.innerHTML = ""; 
+        var selectedKey = agentSelect.value;
+        var selectedValues = {{ result.raw_text|tojson }};
+        if (selectedKey === "") {
+            document.getElementById("agentDropdown").style.display = "none";
+            agentOutput.style.display = "none";
+            document.getElementById("saveButtonDiv").style.display = "none"
+        } else {
+            var selectedList = selectedValues[selectedKey];
+            if (Array.isArray(selectedList)) {
+                var selectOption = document.createElement("option");
+                selectOption.value = "";
+                selectOption.text = "Select Record";
+                agentValues.appendChild(selectOption); 
+                for (var i = 0; i < selectedList.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = selectedList[i].id;
+                    option.text = selectedList[i].id;
+                    agentValues.appendChild(option);
+                }
+                document.getElementById("agentDropdown").style.display = "block"; 
+                document.getElementById("agentOutput").style.display='block';
+                document.getElementById("saveButtonDiv").style.display = "block";
+            }
+        }
+    }
+    
+    
+    function handleValueChange() {
+        var agentValues = document.getElementById("agentValues");
+        var selectedId = agentValues.value;
+        var selectedKey = document.getElementById("agentSelect").value;
+        var selectedValues = {{ result.raw_text|tojson }};
+        if (selectedId === "") {
+            document.getElementById("agentOutput").value = "";
+        } else if (selectedKey !== "" && selectedId !== "") {
+            var selectedList = selectedValues[selectedKey];
+            for (var i = 0; i < selectedList.length; i++) {
+                if (selectedList[i].id === selectedId) {
+                    document.getElementById("agentOutput").value = JSON.stringify(selectedList[i], null, 4);
+                    break;
+                }
+            }
+        }
+    }
+    
+
+    function handleFieldAgentChange() {
+        var selectedId = document.getElementById("agentValues").value;
+        var fieldAgentSelect = document.getElementById("fieldAgentSelect");
+        var fieldAgentOutput = document.getElementById("fieldOutput");
+        var fieldAgentValues = document.getElementById("fieldAgentValues");
+        fieldAgentOutput.value = ""; 
+        fieldAgentValues.innerHTML = ""; 
+        var selectedKey = fieldAgentSelect.value;
+        var selectedValues = {{ result.raw_text|tojson }};
+        if (selectedKey === "") {
+            document.getElementById("fieldAgentDropdown").style.display = "none";
+            fieldAgentOutput.style.display = "none";
+        } else {
+            var selectedList = selectedValues[selectedKey];
+            if (Array.isArray(selectedList)) {
+                var selectOption = document.createElement("option");
+                selectOption.value = "";
+                selectOption.text = "Select Field";
+                fieldAgentValues.appendChild(selectOption);
+                var firstElement = selectedList[0];
+                if (firstElement) { 
+                    for (var key in firstElement) {
+                        if (firstElement.hasOwnProperty(key)) {
+                            var option = document.createElement("option");
+                            option.value = key;
+                            option.text = key;
+                            fieldAgentValues.appendChild(option);
+                        }
+                    }
+                }
+                document.getElementById("fieldAgentDropdown").style.display = "block"; 
+                document.getElementById("fieldOutput").style.display='block';
+            }
+        }
+    }
+
+
+    function handleFieldValueChange() {
+        agentFieldValues = []; 
+        var fieldAgentValues = document.getElementById("fieldAgentValues");
+        var selectedField = fieldAgentValues.value;
+        var selectedKey = document.getElementById("fieldAgentSelect").value;
+        var selectedValues = {{ result.raw_text|tojson }}[selectedKey];
+        if (selectedField === "") {
+            document.getElementById("fieldOutput").value = "";
+        } else if (selectedField !== "" && selectedKey !== "") {
+            selectedValues.forEach(function(agent) {
+                if (selectedField in agent) {
+                    var agentFieldValue = agent[selectedField];
+                    agentFieldValues.push(agentFieldValue);
+                }
+            });
+            document.getElementById("fieldOutput").value = JSON.stringify(agentFieldValues, null, 4);
+        }
+    }
+    
+    
+    function saveData() {
+        var parsedFieldName = document.getElementById("agentValues").value;
+        var parsedFieldValue = document.getElementById('agentOutput').value;
+        
+
+        var resultJSONString = decodeURIComponent('{{ result|tojson|urlencode }}');
+        var resultObject = JSON.parse(resultJSONString);
+
+        var sourceUrl = resultObject.source_full_url;
+        var sourceDomain = resultObject.source_domain_name;
+
+        if (sourceDomain == 'www.redfin.com') {
+            parsedFieldValue = resultObject.raw_text;
+        }
+
+        
+        fetch('/save-data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                source_url: sourceUrl,
+                source_domain: sourceDomain, 
+                field_name: parsedFieldName,
+                field_value: parsedFieldValue
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                window.location.reload();
+                return;
+            }
+            return response.json();
+        })
+        .then(data => {
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('There was a problem with the json parsing:', error);
+        });
+    }
+
+
+
+    function parseAsJson() {
+        var searchedUrlPattern = document.getElementById('jsonInput').value;
+        
+        fetch('/parse-json', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                preprocessing_id: searchedUrlPattern
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                window.location.reload();
+                return;
+            }
+            return response.json();
+        })
+        .then(data => {
+            var jsonString = JSON.stringify(data, null, 4);
+            document.getElementById("jsonOutput").textContent = jsonString;
+           
+        })
+        .catch(error => {
+            console.error('There was a problem with the json parsing:', error);
+        });
+    }
+    
+
+
+    
+
+
+</script>
+
+{% endblock js %}
+{% endblock content %}
